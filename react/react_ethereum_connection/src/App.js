@@ -24,6 +24,20 @@ class App extends Component {
                         {
                           "constant": true,
                           "inputs": [],
+                          "name": "getState",
+                          "outputs": [
+                            {
+                              "name": "",
+                              "type": "string"
+                            }
+                          ],
+                          "payable": false,
+                          "stateMutability": "view",
+                          "type": "function"
+                        },
+                        {
+                          "constant": true,
+                          "inputs": [],
                           "name": "getSecret",
                           "outputs": [
                             {
@@ -45,6 +59,20 @@ class App extends Component {
                           "type": "function"
                         },
                         {
+                          "constant": false,
+                          "inputs": [
+                            {
+                              "name": "newState",
+                              "type": "string"
+                            }
+                          ],
+                          "name": "setState",
+                          "outputs": [],
+                          "payable": true,
+                          "stateMutability": "payable",
+                          "type": "function"
+                        },
+                        {
                           "inputs": [],
                           "payable": false,
                           "stateMutability": "nonpayable",
@@ -56,13 +84,15 @@ class App extends Component {
                           "type": "fallback"
                         }
                       ]);
-
     this.state = {
-      ContractInstance: MyContract.at ('0x03b0bfddd1936a4e838ea72c0186ae123a9160e8')
+      ContractInstance: MyContract.at ('0x2191b219dfceaa2a5e81e6873d1ee30b072dccd1'),
+      contractState: ''
     }
 
 
     this.querySecret = this.querySecret.bind (this);
+    this.queryContractState = this.queryContractState.bind (this);    
+    this.handleContractStateSubmit = this.handleContractStateSubmit.bind (this);
   }
 
   querySecret () {
@@ -72,7 +102,33 @@ class App extends Component {
         if(err) console.error ('An error occured::::', err);
         console.log('This is our contract\'s secret::::', secret);
       });
-    }
+  }
+
+  queryContractState () {
+    const { getState } = this.state.ContractInstance;
+
+    getState ((err, state) => {
+      if (err) console.error ('An error occured::::', err);
+      console.log ('This is our contract\'s state::::', state);
+    });
+  }
+
+  handleContractStateSubmit (event) {
+    event.preventDefault ();
+    const { setState } = this.state.ContractInstance;
+    const { contractState: newState } = this.state;
+
+    setState (
+      newState,
+        {
+          gas: 300000,
+          from: window.web3.eth.accounts[0],
+          value: window.web3.toWei (0.01, 'ether')
+        }, (err, result) => {
+          console.log ('Smart contract state is changing.');
+        }
+      )
+  }
 
   render() {
     return (
@@ -84,9 +140,18 @@ class App extends Component {
 
           <br />
           <br />
-          <button onClick={ this.querySecret }> Query Smart Contract\'s Secret </button>
+          <button onClick={ this.querySecret }> Query Smart Contract\'s Secret </button>   
           <br />
           <br />
+          <button onClick={ this.queryContractState }> Query Smart Contract\'s State </button>
+          <br />
+          <br />
+          <form onSubmit={ this.handleContractStateSubmit }>
+            <input type="text" name="name-change" placeholder="Enter new state.."
+              value={ this.state.contractState }
+              onChange={ event => this.setState ({contractState: event.target.value })} />
+            <button type="submit"> Submit </button>
+          </form>
         </div>
     );
   }
