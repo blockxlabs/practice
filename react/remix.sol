@@ -5,6 +5,8 @@ contract ReactExample {
     string public you_awesome;
     string private secret;
     string private state;
+    bool public pseudoRandomResult;
+    event ExperimentComplete (bool result);
 
     function ReactExample () public {
         owner = msg.sender;
@@ -32,5 +34,12 @@ contract ReactExample {
 
     function setState (string newState) public payable {
         state = newState;
+    }
+    
+    function setExperimentInMotion () public payable returns (bool) {
+        bytes32 _pseudoRandomResult = keccak256 (msg.sender, msg.data, msg.value);
+        if(_pseudoRandomResult > bytes32(10)) pseudoRandomResult = true;
+        else pseudoRandomResult = false;
+        ExperimentComplete (pseudoRandomResult);
     }
 }

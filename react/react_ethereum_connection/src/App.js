@@ -24,6 +24,20 @@ class App extends Component {
                         {
                           "constant": true,
                           "inputs": [],
+                          "name": "pseudoRandomResult",
+                          "outputs": [
+                            {
+                              "name": "",
+                              "type": "bool"
+                            }
+                          ],
+                          "payable": false,
+                          "stateMutability": "view",
+                          "type": "function"
+                        },
+                        {
+                          "constant": true,
+                          "inputs": [],
                           "name": "getState",
                           "outputs": [
                             {
@@ -50,12 +64,38 @@ class App extends Component {
                           "type": "function"
                         },
                         {
+                          "anonymous": false,
+                          "inputs": [
+                            {
+                              "indexed": false,
+                              "name": "result",
+                              "type": "bool"
+                            }
+                          ],
+                          "name": "ExperimentComplete",
+                          "type": "event"
+                        },
+                        {
                           "constant": false,
                           "inputs": [],
                           "name": "kill",
                           "outputs": [],
                           "payable": false,
                           "stateMutability": "nonpayable",
+                          "type": "function"
+                        },
+                        {
+                          "constant": false,
+                          "inputs": [],
+                          "name": "setExperimentInMotion",
+                          "outputs": [
+                            {
+                              "name": "",
+                              "type": "bool"
+                            }
+                          ],
+                          "payable": true,
+                          "stateMutability": "payable",
                           "type": "function"
                         },
                         {
@@ -85,7 +125,7 @@ class App extends Component {
                         }
                       ]);
     this.state = {
-      ContractInstance: MyContract.at ('0x2191b219dfceaa2a5e81e6873d1ee30b072dccd1'),
+      ContractInstance: MyContract.at ('0xe2f36534d829ecbc5e2fb36924c194f6d80c33ac'),
       contractState: ''
     }
 
@@ -93,6 +133,9 @@ class App extends Component {
     this.querySecret = this.querySecret.bind (this);
     this.queryContractState = this.queryContractState.bind (this);    
     this.handleContractStateSubmit = this.handleContractStateSubmit.bind (this);
+    this.queryConditionResult = this.queryConditionResult.bind (this);
+    this.activateExperiment = this.activateExperiment.bind (this);
+    this.state.event = this.state.ContractInstance.ExperimentComplete();
   }
 
   querySecret () {
@@ -130,7 +173,34 @@ class App extends Component {
       )
   }
 
+  queryConditionResult () {
+    const { pseudoRandomResult } = this.state.ContractInstance;
+
+    pseudoRandomResult ((err, result) => {
+      console.log ('This is the smart contract conditional::::', result);
+    });
+  }
+
+  activateExperiment () {
+    const { setExperimentInMotion } = this.state.ContractInstance;
+
+    setExperimentInMotion ({
+      gas: 300000,
+      from: window.web3.eth.accounts[0],
+      value: window.web3.toWei (0.01, 'ether')
+    }, (err, result) => {
+      console.log ('Experiment to determine true or false set in motion.');
+    });
+  }
+
   render() {
+    
+    this.state.event.watch ((err, event) => {
+      if (err) console.error ('An error occured::::', err);
+      console.log ('This is the event::::', event);
+      console.log ('This is the Experiment result::::', event.arg.result);
+    });
+
     return (
       <div className="App">
           <header className="App-header">
@@ -140,10 +210,16 @@ class App extends Component {
 
           <br />
           <br />
-          <button onClick={ this.querySecret }> Query Smart Contract\'s Secret </button>   
+          <button onClick={ this.querySecret }> Query Smart Contract's Secret </button>
           <br />
           <br />
-          <button onClick={ this.queryContractState }> Query Smart Contract\'s State </button>
+          <button onClick={ this.queryContractState }> Query Smart Contract's State </button>
+          <br />
+          <br />
+          <button onClick={ this.queryConditionResult }> Query Smart Contract Conditinal Result </button>
+          <br />
+          <br />
+          <button onClick={ this.activateExperiment }> Start Experiment on smart Contract </button>
           <br />
           <br />
           <form onSubmit={ this.handleContractStateSubmit }>
@@ -154,6 +230,7 @@ class App extends Component {
           </form>
         </div>
     );
+    
   }
 }
 
