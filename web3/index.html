@@ -42,53 +42,80 @@
     web3.eth.defaultAccount = web3.eth.accounts[0];
 
     var CoursetroContract = web3.eth.contract([
-                            {
-                              "constant": false,
-                              "inputs": [
-                                {
-                                  "name": "_fName",
-                                  "type": "string"
-                                },
-                                {
-                                  "name": "_age",
-                                  "type": "uint256"
-                                }
-                              ],
-                              "name": "setInstructor",
-                              "outputs": [],
-                              "payable": false,
-                              "stateMutability": "nonpayable",
-                              "type": "function"
-                            },
-                            {
-                              "constant": true,
-                              "inputs": [],
-                              "name": "getInstructor",
-                              "outputs": [
-                                {
-                                  "name": "",
-                                  "type": "string"
-                                },
-                                {
-                                  "name": "",
-                                  "type": "uint256"
-                                }
-                              ],
-                              "payable": false,
-                              "stateMutability": "view",
-                              "type": "function"
-                            }
-                          ]);
-    var Coursetro = CoursetroContract.at('0x280f45eb72090eac4703d0fe5ce90af8b482392c');
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "getInstructor",
+    "outputs": [
+      {
+        "name": "",
+        "type": "string"
+      },
+      {
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "name": "age",
+        "type": "uint256"
+      }
+    ],
+    "name": "instructor",
+    "type": "event"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "name": "_fName",
+        "type": "string"
+      },
+      {
+        "name": "_age",
+        "type": "uint256"
+      }
+    ],
+    "name": "setInstructor",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]);
+    var Coursetro = CoursetroContract.at('0xfcd456e0fcb2702c1df3a1942be2d8caa311aa22');
     console.log(Coursetro);
 
-    Coursetro.getInstructor(function(error, result){
-      if(!error) {
-        $('#instructor').html(result[0]+ ' (' + result[1] + 'years old)');
+    var Instructorevent = Coursetro.instructor();
+
+    Instructorevent.watch(function(err, result){
+      if(!err) {
+        console.log(result);
+        $('#instructor').html(result.args.name+ ' (' + result.args.age + ' years old)');
       } else {
-        console.log(error);
+        console.log(err);
       }
     });
+    // Coursetro.getInstructor(function(error, result){
+    //   if(!error) {
+    //     $('#instructor').html(result[0]+ ' (' + result[1] + 'years old)');
+    //   } else {
+    //     console.log(error);
+    //   }
+    // });
 
 
     $("#button").click(function() {
